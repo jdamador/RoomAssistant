@@ -127,7 +127,7 @@ def detect():
     cv2.cv2.destroyAllWindows()
 
 
-def getFrame():
+def getStatus():
     url = "http://172.24.86.177:8080/shot.jpg"
 
     while True:
@@ -138,4 +138,3 @@ def getFrame():
         detect()
         break
 
-getFrame()
