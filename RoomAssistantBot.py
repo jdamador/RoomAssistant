@@ -1,67 +1,56 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# This program is to control a object recognizer.
+# Import all required libraries.
+import telebot
+import ast
+import time
+from telebot import types
+from tools.recognizer import *
 
-import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+#* Set our Telegram token.
+TOKEN = '987076381:AAEK8oT-VhNvnTKvx3pWTgNnte9EWC__Vf0'
+bot = telebot.AsyncTeleBot(TOKEN)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Set a list of possibles options to request.
+stringList = {"1": "Lab 1", "2": "Lab 2", "3": "Lab 3",
+              "4": "Móviles", "5": "Miniauditorio", "6": "Lab 210"}
 
+#*  Create a Inline Keyboard.
+def makeKeyboard():
+    markup = types.InlineKeyboardMarkup()
+    for key, value in stringList.items():
+        markup.add(types.InlineKeyboardButton(text=value,
+                                              callback_data="['value', '" + value + "', '" + key + "']"))
+    return markup
 
-def start(update, context):
-    keyboard = [[InlineKeyboardButton("Estado de Móviles", callback_data='1'),
-                 InlineKeyboardButton("Estado de E-210", callback_data='2')],
+#* Set a new handler to manage the default message to show it when the bot starts.
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(
+        message, 'Bienvenido al sistema de consulta de estado de los laboratorio de Computación. Ingrese el comando /rooms para iniciar.')
 
-                [InlineKeyboardButton("Estadp de MiniAuditorio", callback_data='3')]]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    update.message.reply_text('Please choose:', reply_markup=reply_markup)
-
-
-def button(update, context):
-    query = update.callback_querylasedf
-    if(query.data == '1'):
-        status = 1232
-        query.edit_message_text(text= "Hay aproximandamente: {}".format(status))
-    elif(query.data == '2'):
-        status = 11
-        query.edit_message_text(text= "Hay aproximandamente: {}".format(status))
-    elif(query.data == '3'):
-        status = 1232
-        query.edit_message_text(text= "Hay aproximandamente: {}".format(status))
-
-
-def help(update, context):
-    update.message.reply_text("Use /start to test this bot.")
-
-
-def error(update, context):
-    """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
-def main():
-    # Create the Updater and pass it your bot's token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
-    updater = Updater("987076381:AAEK8oT-VhNvnTKvx3pWTgNnte9EWC__Vf0", use_context=True)
-
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
-    updater.dispatcher.add_error_handler(error)
-
-    # Start the Bot
-    updater.start_polling()
-
-    # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT
-    updater.idle()
-
-
-if __name__ == '__main__':
-    main()
+#* Set a new handler to deal with all request to the bot.
+@bot.message_handler(commands=['rooms'])
+def handle_command_adminwindow(message):
+    bot.send_message(chat_id=message.chat.id,
+                     text='Laboratorios de la carrera de Computación',
+                     reply_markup=makeKeyboard(),
+                     parse_mode='HTML')
+    
+#* Function that response the petition about some room state.
+@bot.callback_query_handler(func=lambda call: True)
+def handle_query(call):
+    if (call.data.startswith("['value'")):
+        option = ast.literal_eval(call.data)[1]
+        if(option == 'Miniauditorio'):
+            status =  getStatus("http://172.24.124.210:8080/shot.jpg")
+            bot.answer_callback_query(callback_query_id=call.id,
+                                    show_alert=True,
+                                    text= "Hay aproximadamente %s persona(s) en el %s" % (status, option) )
+        else: 
+             bot.answer_callback_query(callback_query_id=call.id,
+                                    show_alert=True,
+                                    text= "Esta funcionabilidad estará disponible próximamente.")
+while True:
+    try:
+        bot.polling()
+    except:
+        time.sleep(10)
