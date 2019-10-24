@@ -4,6 +4,7 @@ import ast
 import time
 from telebot import types
 from tools.recognizer import *
+from telegram.ext.dispatcher import run_async
 
 #* Set our Telegram token.
 TOKEN = '987076381:AAEK8oT-VhNvnTKvx3pWTgNnte9EWC__Vf0'
@@ -29,6 +30,7 @@ def send_welcome(message):
 
 #* Set a new handler to deal with all request to the bot.
 @bot.message_handler(commands=['rooms'])
+
 def handle_command_adminwindow(message):
     bot.send_message(chat_id=message.chat.id,
                      text='Laboratorios de la carrera de Computación',
