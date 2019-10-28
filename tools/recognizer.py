@@ -1,39 +1,18 @@
 # Import all libraries to make the counting.
+import sys
+import tensorflow as tf
+import numpy as np
+import cv2
 from object_detection.utils import visualization_utils as vis_util
 from object_detection.utils import label_map_util
 import requests
 import importlib
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import cv2
-import numpy as np
-import tensorflow as tf
-import sys
 tf.get_logger().setLevel('INFO')
 
+
 def detect():
-    sys.path.append("..")
-
-    # Name of the directory containing the object detection module we're using
-    MODEL_NAME = 'inference_graph'
-    
-    # The path to the image in which the object has to be detected.
-    IMAGE_NAME = 'shot.jpg'
-
-    # Grab path to current working directory
-    CWD_PATH = os.getcwd()
-    
-    # Path to frozen_inference_graph .pb file, which contains the model that is used
-    # for object detection.
-    PATH_TO_CKPT = os.path.join(
-        CWD_PATH, MODEL_NAME, 'frozen_inference_graph.pb')
-
-    # Path to label map file
-    PATH_TO_LABELS = os.path.join(CWD_PATH, 'training', 'labelmap.pbtxt')
-
-    # Path to image
-    PATH_TO_IMAGE = os.path.join(CWD_PATH, IMAGE_NAME)
-
     # Number of classes the object detector can identify
     NUM_CLASSES = 1
 
@@ -42,7 +21,7 @@ def detect():
     # network predicts `5`, we know that this corresponds to `king`.
     # Here we use internal utility functions, but anything that returns a
     # dictiocv2.imshow('Video', output_q.get())nary mapping integers to appropriate string labels would be fine
-    label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
+    label_map = label_map_util.load_labelmap('tools/training/labelmap.pbtxt')
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
@@ -51,7 +30,7 @@ def detect():
     detection_graph = tf.Graph()
     with detection_graph.as_default():
         od_graph_def = tf.compat.v1.GraphDef()
-        with tf.io.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
+        with tf.io.gfile.GFile('tools/inference_graph/frozen_inference_graph.pb', 'rb') as fid:
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
@@ -79,7 +58,7 @@ def detect():
     # Load image using OpenCV and
     # expand image dimensions to have shape: [1, None, None, 3]
     # i.e. a single-column array, where each item in the column has the pixel RGB value
-    image = cv2.cv2.imread(PATH_TO_IMAGE)
+    image = cv2.cv2.imread('shot.jpg')
     image_expanded = np.expand_dims(image, axis=0)
 
     # Perform the actual detection by running the model with the image as input
