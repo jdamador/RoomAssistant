@@ -42,11 +42,26 @@ def handle_query(call):
     print('Waiting')
     if (call.data.startswith("['value'")):
         option = ast.literal_eval(call.data)[1]
-        if(option == 'Miniauditorio'):
-            status =  getStatus("http://172.24.124.210:8080/shot.jpg")
+        if(option == 'Móviles'):
+            status =  getStatus("http://compu:ICSCcomputec@172.24.15.126/mjpg/video.mjpg")
             bot.answer_callback_query(callback_query_id=call.id,
                                     show_alert=True,
                                     text= "Hay aproximadamente %s persona(s) en el %s" % (status, option) )
+        
+            if(status > 10):
+                bot.answer_callback_query(callback_query_id=call.id,
+                                    show_alert=True,
+                                    text= "%s esta ocupado con aproximadamente %s personas" % (option, status) )
+            elif(status > 2):
+                 bot.answer_callback_query(callback_query_id=call.id,
+                                    show_alert=True,
+                                    text= "%s esta semi ocupado con aproximadamente %s personas" % (option, status) )
+            elif(status < 2):
+                bot.answer_callback_query(callback_query_id=call.id,
+                                    show_alert=True,
+                                    text= "%s esta semi libre con aproximadamente %s personas" % (option, status) )
+        
+        
         else: 
              bot.answer_callback_query(callback_query_id=call.id,
                                     show_alert=True,
